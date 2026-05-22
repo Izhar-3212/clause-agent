@@ -18,6 +18,6 @@ services:
       - key: EXAMPLES_PATH
         value: ./knowledge/examples
       - key: ALLOWED_ORIGINS
-        value: https://mapspec.io,http://localhost:3000
+        value: https://mapspec.io,https://www.mapspec.io,http://localhost:3000,http://localhost:3080
       - key: ANTHROPIC_API_KEY
         sync: false

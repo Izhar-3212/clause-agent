@@ -47,21 +47,28 @@ const logger_1 = require("../logger");
 dotenv.config();
 const app = (0, express_1.default)();
 const PORT = process.env.PORT || 3002;
-const allowedOrigins = (process.env.ALLOWED_ORIGINS || '')
-    .split(',')
-    .map(o => o.trim())
-    .filter(Boolean);
 app.use((0, cors_1.default)({
     origin: (origin, callback) => {
-        if (!origin || allowedOrigins.includes(origin)) {
+        if (!origin)
+            return callback(null, true);
+        if (process.env.ALLOWED_ORIGINS === '*') {
+            return callback(null, true);
+        }
+        const allowed = (process.env.ALLOWED_ORIGINS || '')
+            .split(',')
+            .map(o => o.trim())
+            .filter(Boolean);
+        if (allowed.includes(origin)) {
             callback(null, true);
         }
         else {
+            logger_1.logger.warn({ origin, allowed }, 'CORS blocked origin');
             callback(new Error('Not allowed by CORS'));
         }
     },
     methods: ['GET', 'POST', 'OPTIONS'],
     allowedHeaders: ['Content-Type'],
+    credentials: false,
 }));
 app.use(express_1.default.json({ limit: '10kb' }));
 const DOCS_PATH = path.resolve(process.env.KNOWLEDGE_BASE_PATH || './knowledge/docs');
@@ -71,6 +78,12 @@ const anthropic = new sdk_1.default({
     apiKey: process.env.ANTHROPIC_API_KEY,
 });
 async function initialize() {
+    if (!process.env.ANTHROPIC_API_KEY) {
+        logger_1.logger.error('ANTHROPIC_API_KEY is not set — Clause will fail all chat requests');
+    }
+    else {
+        logger_1.logger.info('ANTHROPIC_API_KEY is set ✓');
+    }
     logger_1.logger.info('Loading Clause knowledge base...');
     knowledgeBase = (0, loader_1.loadKnowledgeBase)(DOCS_PATH, EXAMPLES_PATH);
     logger_1.logger.info({

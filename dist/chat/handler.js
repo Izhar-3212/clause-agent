@@ -21,12 +21,24 @@ async function handleChat(request, knowledgeBase, anthropic) {
         })),
         { role: 'user', content: message },
     ];
-    const response = await anthropic.messages.create({
-        model: 'claude-haiku-4-5-20251001',
-        max_tokens: 1024,
-        system: systemPrompt,
-        messages,
-    });
+    let response;
+    try {
+        response = await anthropic.messages.create({
+            model: 'claude-haiku-4-5-20251001',
+            max_tokens: 1024,
+            system: systemPrompt,
+            messages,
+        }, { timeout: 30000 });
+    }
+    catch (err) {
+        logger_1.logger.error({
+            err: err.message,
+            status: err.status,
+            type: err.type,
+            sessionId,
+        }, 'Anthropic API call failed');
+        throw err;
+    }
     const responseText = response.content
         .filter(b => b.type === 'text')
         .map(b => b.text)
