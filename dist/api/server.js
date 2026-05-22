@@ -64,8 +64,8 @@ app.use((0, cors_1.default)({
     allowedHeaders: ['Content-Type'],
 }));
 app.use(express_1.default.json({ limit: '10kb' }));
-const DOCS_PATH = path.resolve(process.env.KNOWLEDGE_BASE_PATH || '../map-spec/docs');
-const EXAMPLES_PATH = path.resolve(process.env.EXAMPLES_PATH || '../map-spec/examples');
+const DOCS_PATH = path.resolve(process.env.KNOWLEDGE_BASE_PATH || './knowledge/docs');
+const EXAMPLES_PATH = path.resolve(process.env.EXAMPLES_PATH || './knowledge/examples');
 let knowledgeBase = [];
 const anthropic = new sdk_1.default({
     apiKey: process.env.ANTHROPIC_API_KEY,

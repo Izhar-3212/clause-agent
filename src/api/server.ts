@@ -32,10 +32,10 @@ app.use(cors({
 app.use(express.json({ limit: '10kb' }));
 
 const DOCS_PATH = path.resolve(
-  process.env.KNOWLEDGE_BASE_PATH || '../map-spec/docs'
+  process.env.KNOWLEDGE_BASE_PATH || './knowledge/docs'
 );
 const EXAMPLES_PATH = path.resolve(
-  process.env.EXAMPLES_PATH || '../map-spec/examples'
+  process.env.EXAMPLES_PATH || './knowledge/examples'
 );
 
 let knowledgeBase: KnowledgeChunk[] = [];
