@@ -1,0 +1,36 @@
+map-spec: "1.1.0"
+layer: functional
+
+unit:
+  id: FUNC-001
+  name: User Authentication
+  description: >
+    Allow viewers to register with email/password, log in, reset their password,
+    and maintain a persistent session across devices.
+  userStory: >
+    As a viewer, I want to create an account and log in so I can access
+    personalized content, track my watch history, and manage my subscription.
+
+acceptanceCriteria:
+  - Given a valid email and strong password, when I register, then my account is
+    created and I receive a confirmation email within 60 seconds
+  - Given an unverified email, when I try to log in, then I see a prompt to
+    verify my email before access is granted
+  - Given valid credentials, when I log in, then I am redirected to my
+    personalized homepage and a session token is issued with 7-day expiry
+  - Given an invalid password, when I attempt login, then I see a clear error
+    message and the attempt is logged for rate-limiting
+  - Given 5 failed attempts in 10 minutes, when I try again, then I am
+    locked out for 15 minutes and shown a lockout message
+  - Given I am logged in, when I click logout, then my session is invalidated
+    server-side and I am redirected to the public homepage
+  - Given I forgot my password, when I request a reset, then I receive a
+    one-time reset link valid for 30 minutes
+
+priority: high
+phase: 1
+dependencies: []
+
+notes: >
+  Authentication is handled via Supabase Auth. Social login (Google, Apple)
+  is deferred to Phase 2. MFA is a Phase 3 requirement.

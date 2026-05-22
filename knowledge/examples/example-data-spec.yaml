@@ -1,0 +1,75 @@
+map-spec: "1.1.0"
+layer: data
+
+unit:
+  id: DATA-001
+  name: videos
+  description: >
+    Stores metadata for all video assets — both VOD and live-to-VOD recordings.
+    Does not store the video files themselves (those live in Cloudflare Stream).
+  table: videos
+
+columns:
+  - name: id
+    type: uuid
+    primaryKey: true
+    default: gen_random_uuid()
+    nullable: false
+  - name: title
+    type: varchar(255)
+    nullable: false
+  - name: description
+    type: text
+    nullable: true
+  - name: duration_seconds
+    type: integer
+    nullable: true
+    description: Null for live streams; populated after VOD processing completes
+  - name: thumbnail_url
+    type: varchar(500)
+    nullable: true
+  - name: stream_key
+    type: varchar(255)
+    nullable: false
+    unique: true
+    description: Cloudflare Stream asset ID used to build the playback URL
+  - name: category_id
+    type: uuid
+    nullable: true
+    foreignKey: categories.id
+  - name: subscription_tier
+    type: varchar(50)
+    nullable: false
+    default: "'free'"
+    description: "free | premium — controls entitlement check in API"
+  - name: geo_restrictions
+    type: jsonb
+    nullable: true
+    description: Array of ISO 3166-1 alpha-2 country codes that may NOT access this video
+  - name: published_at
+    type: timestamptz
+    nullable: true
+    description: Null means draft — not visible to viewers
+  - name: created_at
+    type: timestamptz
+    nullable: false
+    default: now()
+  - name: deleted_at
+    type: timestamptz
+    nullable: true
+    description: Soft delete — never hard delete video records
+
+indexes:
+  - name: idx_videos_category_id
+    columns: [category_id]
+  - name: idx_videos_published_at
+    columns: [published_at]
+    where: published_at IS NOT NULL
+  - name: idx_videos_subscription_tier
+    columns: [subscription_tier]
+
+rowLevelSecurity: true
+softDelete: deleted_at
+
+seed:
+  description: Seed with 20 sample videos across 4 categories for local development

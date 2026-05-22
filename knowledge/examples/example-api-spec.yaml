@@ -1,0 +1,72 @@
+map-spec: "1.1.0"
+layer: api
+
+unit:
+  id: API-001
+  name: Get Video Stream URL
+  description: >
+    Retrieve a signed, time-limited streaming URL for a video asset. Validates
+    subscription entitlement and geographic restrictions before issuing a
+    DRM token and Cloudflare-signed URL.
+  method: GET
+  path: /videos/:videoId/stream
+  auth: bearer
+
+parameters:
+  - name: videoId
+    in: path
+    required: true
+    type: string
+    format: uuid
+    description: Unique identifier of the video asset
+  - name: quality
+    in: query
+    required: false
+    type: string
+    enum: [auto, 1080p, 720p, 480p, 360p]
+    default: auto
+    description: Requested initial playback quality (ABR overrides if auto)
+  - name: platform
+    in: query
+    required: false
+    type: string
+    enum: [web, ios, android, tv]
+    default: web
+    description: Client platform — determines DRM type (Widevine vs FairPlay)
+
+responses:
+  200:
+    description: Signed streaming URL and DRM token returned successfully
+    schema:
+      streamUrl:
+        type: string
+        description: Cloudflare-signed HLS/DASH manifest URL (expires in 4 hours)
+      drmToken:
+        type: string
+        description: Platform-specific DRM licence token
+      expiresAt:
+        type: string
+        format: ISO 8601
+        description: Timestamp when streamUrl becomes invalid
+      quality:
+        type: string
+        description: Resolved initial quality level
+      captionsAvailable:
+        type: array
+        items: string
+        description: Available caption language codes (e.g. en, fr, es)
+  401:
+    description: Missing or expired authentication token
+  403:
+    description: User subscription tier does not include this content
+  404:
+    description: Video not found or has been removed
+  429:
+    description: Concurrent stream limit reached for this account
+
+rateLimit: 60/minute per user
+cacheable: false
+
+notes: >
+  Never cache this response — the signed URL must be freshly generated per
+  request. Log every issuance to the usage_records table for billing.

@@ -1,0 +1,83 @@
+map-spec: "1.1.0"
+layer: quality
+
+unit:
+  id: QUAL-001
+  name: Streaming Platform Quality Gates
+  description: >
+    Performance targets, reliability SLAs, testing requirements, and monitoring
+    rules for the StreamVault video platform. These gates must pass before any
+    Phase 1 milestone is considered done.
+
+performanceTargets:
+  - metric: Time to First Frame
+    target: "< 3 seconds"
+    measurement: P95 across web, iOS, and Android on a 10 Mbps connection
+    alertThreshold: "> 4 seconds for 5 consecutive minutes"
+
+  - metric: Buffering Rate
+    target: "< 1% of total playback time"
+    measurement: Aggregated across all active sessions per 15-minute window
+    alertThreshold: "> 2% for any 15-minute window"
+
+  - metric: Stream URL API Latency
+    target: "< 200ms"
+    measurement: P99 for GET /videos/:videoId/stream
+    alertThreshold: "> 500ms P99 sustained for 2 minutes"
+
+  - metric: Page Load Time (Homepage)
+    target: "< 2.5 seconds LCP"
+    measurement: Lighthouse CI on simulated 4G — no regression from baseline
+
+reliabilityTargets:
+  - metric: Platform Uptime
+    target: 99.9%
+    period: calendar month
+    excludes: Scheduled maintenance windows (max 2 hours/month, communicated 48h in advance)
+
+  - metric: API Error Rate
+    target: "< 0.1% 5xx responses"
+    measurement: Percentage of total requests over any 5-minute rolling window
+
+  - metric: Video Availability
+    target: "< 0.01% of videos return 404 unexpectedly"
+    measurement: Daily synthetic probe of 100 random published video IDs
+
+testingRequirements:
+  - type: Unit
+    scope: All business rule evaluations in RULE-001
+    coverage: 100% branch coverage required
+    tool: Vitest
+
+  - type: Integration
+    scope: DRM token generation, Cloudflare Stream URL signing, Supabase RLS policies
+    requirement: Must run against real Supabase staging environment — no mocks
+
+  - type: Load
+    scope: Streaming endpoint under 10,000 concurrent sessions
+    tool: k6
+    passCriteria: Error rate < 0.1%, P99 latency < 500ms, no memory leak over 30 minutes
+
+  - type: Cross-browser
+    scope: Video player and authentication flows
+    browsers: [Chrome 120+, Firefox 120+, Safari 17+, Edge 120+]
+    devices: [Desktop, iPad, iPhone 14, Samsung Galaxy S23]
+
+  - type: Accessibility
+    scope: All public-facing pages
+    tool: axe-core + manual screen reader review (NVDA on Windows, VoiceOver on iOS)
+    standard: WCAG 2.1 AA — zero critical violations
+
+monitoringRequirements:
+  - name: Buffering Rate Dashboard
+    tool: Grafana
+    refresh: Real-time (30-second intervals)
+    alert: PagerDuty when > 2% for 15 minutes
+
+  - name: Error Rate Alert
+    condition: 5xx rate > 0.5% for 5 consecutive minutes
+    channel: Slack #incidents + PagerDuty on-call
+
+  - name: Daily Quality Report
+    metrics: [time-to-first-frame P95 by region, buffering rate by ISP, top 10 error codes]
+    delivery: Email to product-team@streamvault.io at 07:00 UTC

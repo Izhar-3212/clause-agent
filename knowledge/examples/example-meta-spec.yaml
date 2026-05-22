@@ -1,0 +1,49 @@
+map-spec: "1.1.0"
+layer: meta
+
+project:
+  id: streamvault
+  name: StreamVault
+  description: >
+    A video streaming portal with live broadcast and on-demand content.
+    Supports subscription tiers, DRM-protected assets, and personalized
+    recommendations for 10,000+ concurrent viewers.
+  version: "1.0.0"
+  domain: media-streaming
+  owner: product-team
+
+stakeholders:
+  - role: Product Owner
+    name: Sarah Chen
+    contact: sarah.chen@streamvault.io
+  - role: Tech Lead
+    name: James Kirk
+    contact: james.kirk@streamvault.io
+  - role: Legal & Compliance
+    name: Priya Nair
+
+constraints:
+  - Must support 10,000 concurrent viewers at P99 buffering rate < 1%
+  - Mobile-first responsive design targeting iOS 15+ and Android 10+
+  - WCAG 2.1 AA accessibility compliance across all pages
+  - Content must be DRM-protected (Widevine + FairPlay)
+  - GDPR-compliant user data handling with right-to-erasure support
+
+integrations:
+  - name: Supabase
+    purpose: Database, authentication, row-level security
+  - name: Cloudflare Stream
+    purpose: Video transcoding, adaptive bitrate delivery, edge caching
+  - name: Stripe
+    purpose: Subscription billing and payment processing
+  - name: SendGrid
+    purpose: Transactional email (registration, receipts, alerts)
+
+glossary:
+  VOD: Video on Demand — pre-recorded content available at any time
+  EPG: Electronic Programme Guide — schedule of live broadcast timeslots
+  DRM: Digital Rights Management — cryptographic content protection system
+  ABR: Adaptive Bitrate — dynamically adjusts quality to network conditions
+  HLS: HTTP Live Streaming — Apple's adaptive streaming protocol
+  DASH: Dynamic Adaptive Streaming over HTTP — open standard ABR protocol
+  SVOD: Subscription Video on Demand — content gated behind a subscription

@@ -1,0 +1,23 @@
+services:
+  - type: web
+    name: clause-mapspec
+    runtime: node
+    region: oregon
+    plan: free
+    buildCommand: npm install && npm run build
+    startCommand: node dist/index.js
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 3002
+      - key: CLAUSE_VERSION
+        value: 1.0.0
+      - key: KNOWLEDGE_BASE_PATH
+        value: ./knowledge/docs
+      - key: EXAMPLES_PATH
+        value: ./knowledge/examples
+      - key: ALLOWED_ORIGINS
+        value: https://mapspec.io,http://localhost:3000
+      - key: ANTHROPIC_API_KEY
+        sync: false

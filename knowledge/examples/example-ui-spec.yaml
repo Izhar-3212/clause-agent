@@ -1,0 +1,69 @@
+map-spec: "1.1.0"
+layer: ui
+
+unit:
+  id: UI-001
+  name: VideoPlayer
+  description: >
+    Full-featured adaptive video player with playback controls, quality selector,
+    subtitle overlay, and DRM support. Renders in-page with no redirect.
+  type: component
+  framework: React
+  path: components/VideoPlayer/VideoPlayer.tsx
+
+props:
+  - name: videoId
+    type: string
+    required: true
+    description: UUID of the video asset — used to fetch the stream URL
+  - name: autoPlay
+    type: boolean
+    required: false
+    default: false
+    description: Begin playback immediately on mount (muted if required by browser)
+  - name: startAtSeconds
+    type: number
+    required: false
+    default: 0
+    description: Resume playback from this timestamp (used for watch-history resumption)
+  - name: onComplete
+    type: "(videoId: string) => void"
+    required: false
+    description: Fired when playback reaches the end of the video
+  - name: onError
+    type: "(error: PlayerError) => void"
+    required: false
+    description: Fired on unrecoverable playback failure
+
+states:
+  - idle
+  - loading
+  - playing
+  - paused
+  - buffering
+  - error
+  - completed
+
+childComponents:
+  - VideoControls
+  - QualitySelector
+  - SubtitleOverlay
+  - PlaybackProgressBar
+  - VolumeControl
+
+accessibility:
+  - All controls keyboard-navigable (Space = play/pause, Arrow keys = seek ±10s)
+  - ARIA roles and labels on every interactive element
+  - Subtitles/captions toggle visible and focusable
+  - Screen reader announces state transitions (playing, paused, buffering)
+  - Color contrast ratio ≥ 4.5:1 for all overlaid text
+
+responsive: true
+breakpoints:
+  mobile: Full-width, stacked controls below player
+  tablet: 16:9 aspect ratio maintained, controls overlaid
+  desktop: 16:9 aspect ratio, controls fade in on hover
+
+notes: >
+  Uses HLS.js on web (Chrome, Firefox) and native HLS on Safari/iOS.
+  FairPlay DRM initialised on iOS; Widevine on Android and desktop Chrome.

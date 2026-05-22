@@ -1,0 +1,60 @@
+map-spec: "1.1.0"
+layer: rules
+
+unit:
+  id: RULE-001
+  name: Content Access Control
+  description: >
+    Business rules that govern which users may access which video content.
+    All rules are evaluated server-side in the /videos/:videoId/stream endpoint
+    before any streaming URL or DRM token is issued.
+  aiInstruction: >
+    Enforce these rules strictly in order of priority. Never expose a DRM token
+    or signed stream URL until all applicable rules pass. Authentication check
+    must run first. Subscription check runs before geographic check. Log every
+    denial to the access_denials table with the rule ID that triggered it.
+
+rules:
+  - id: RULE-001-A
+    name: Authentication Required
+    priority: 1
+    condition: "request.user === null"
+    action: Return 401 with WWW-Authenticate header
+    appliesTo: all content tiers
+
+  - id: RULE-001-B
+    name: Subscription Tier Entitlement
+    priority: 2
+    condition: "video.subscription_tier === 'premium' && user.subscription_tier !== 'premium'"
+    action: "Return 403 with body { error: 'SUBSCRIPTION_REQUIRED', upgradeUrl: '/subscribe' }"
+    appliesTo: premium content only
+
+  - id: RULE-001-C
+    name: Geographic Restriction
+    priority: 3
+    condition: "video.geo_restrictions !== null && video.geo_restrictions.includes(user.countryCode)"
+    action: "Return 403 with body { error: 'GEO_RESTRICTED', region: user.countryCode }"
+    appliesTo: content with non-null geo_restrictions
+
+  - id: RULE-001-D
+    name: Concurrent Stream Limit
+    priority: 4
+    condition: "user.activeStreams >= subscriptionTier.maxConcurrentStreams"
+    action: "Return 429 with body { error: 'STREAM_LIMIT_REACHED', activeDevices: [...], maxAllowed: n }"
+    appliesTo: all authenticated users
+
+  - id: RULE-001-E
+    name: Account Suspension
+    priority: 0
+    condition: "user.status === 'suspended'"
+    action: "Return 403 with body { error: 'ACCOUNT_SUSPENDED', contactUrl: '/support' }"
+    appliesTo: all content — checked before all other rules
+
+exceptions:
+  - "Free preview: First 180 seconds of any premium video are accessible without a premium subscription. After 180s the stream endpoint returns 403."
+  - "Admin bypass: Users with role admin bypass geographic restrictions and concurrent stream limits. Subscription check still applies."
+  - "Embed partners: Requests with a valid partner API key bypass auth and subscription checks but are still subject to geographic restrictions."
+
+auditLog:
+  table: access_denials
+  fields: [user_id, video_id, rule_id, country_code, timestamp]
